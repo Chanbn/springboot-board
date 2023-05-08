@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<div th:fragment="fragment-nav">
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #6f42c1;">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" th:href="@{/home}" style='color: #fff;'>home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/board/notice/list}" style='color: #fff;'>공지사항</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/board/free/list}" style='color: #fff;'>자유게시판</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/board/qna/list}" style='color: #fff;'>문의사항</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #6f42c1;">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav ms-auto">
+      
+<li sec:authorize="hasRole('ROLE_ADMIN')">
+<a th:href="@{'/member/list'}">
+<span sec:authentication="name" style='color: #fff;'></span>
+</a>
+</li>
+<li sec:authorize="hasRole('ROLE_USER')"><span sec:authentication="name" style='color: #fff;'></span></li>
+
+			<li class="nav-item dropdown"  sec:authorize="isAuthenticated()">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false" style='color: #fff;'>
+            프로필
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+			<li><a class="dropdown-item" th:href="@{/member/profile(username=${session.user?.username})}" style='color: black;'>회원정보수정</a></li>
+ 			<li><a class="dropdown-item" th:href="@{/member/postinfo(username=${session.user?.username})}" style='color: black;'>게시글목록</a></li>           
+			<li><a class="dropdown-item" th:href="@{/member/commentInfo(username=${session.user?.username})}" style='color: black;'>댓글목록</a></li>
+          </ul>
+        </li>
+        
+        <li class="nav-item">
+        <a  sec:authorize="isAnonymous()" class="nav-link" href="/member/login" style='color: #fff;'>로그인</a>
+		<li class="nav-item"> 
+		<a  sec:authorize="isAnonymous()" class="nav-link" href="/member/signup" style='color: #fff;'>회원가입</a>
+		</li>     
+    <li class="navbar-nav ms-auto"> 
+        <form th:action="@{/view/logoutProc}" method="post" sec:authorize="isAuthenticated()">
+            <!--  <input type="hidden" name="${ _csrf.parameterName }" value="${ _csrf.token }"> -->
+            <button class="nav-link" sec:authorize="isAuthenticated()" type="submit" >Logout</button>
+        </form>
+     </li>   
+      </ul>
+    </div>
+  </div>
+</nav>
+
+</div>
+
+</html>

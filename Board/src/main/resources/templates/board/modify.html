@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<script src="https://code.jquery.com/jquery.min.js"></script> 
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+<div class="col-lg-6" style="text-align:center">
+<form role="form" th:object=${vo} >
+    <input type="hidden" th:if="*{idx != null and idx > 0}" th:field="*{idx}" />
+	<input type="hidden" th:field="*{changeYn}" value="N">
+<table class="table">
+  <thead>
+    <tr>
+      <th colspan="3" scope="col">
+      <label for="title" style="font-weight:bolder;">제목</label>
+      <input type="text" th:field="*{title}" id="title" name="title" required="required">
+      <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td colspan="3">
+  <div style="text-align:right">
+  <span>작성자</span>&nbsp; <input type="text" th:field="*{writer}" id="writer" name="writer" placeholder="작성자를 입력하세요." required="required" readonly>&nbsp;&nbsp; <span>등록시간</span>
+  	<input th:field="*{email}" id="email"> 
+  </div>
+  </td>
+  </tr>
+
+    <tr height="200">
+    
+      <td>      
+            <label for="content" style="font-weight:bolder;">내용</label>  
+      <textarea th:field="*{content}" id="content" name="content" rows="15" cols="50" placeholder="내용을 입력하세요." required="required"></textarea></td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(fileList)}" data-name="fileDiv">
+<label for="file_0" class="col-sm-2 control-label">파일1</label>
+	<div class="col-sm-10">
+	<input type="text"  class="upload-name" value="파일찾기" readonly/>
+		<input type="hidden" th:id="0" class="fileIdxnum">
+	<label for="file_0" class="control-label">찾아보기</label>
+	<input type="file" name="files" id="file_0"  style="display:none;" onchange="changeFilename(this)"> 
+	<button type="button" onclick="addFile()">+
+	<i class="fa fa-plus" aria-hidden="true" ></i>
+	</button>	
+	<button type="button" onclick="removeFile(this)">-
+	<i class="fa fa-minus" aria-hidden="true"></i>
+	</button>
+	</div>
+</div>
+
+<div th:unless="${#lists.isEmpty(fileList)}" th:each="row, status : ${fileList}" data-name="fileDiv">
+<label th:for="|file_${status.index}|" class="col-sm-2 control-label">[[|파일${status.count}|]]</label>
+	<div class="col-sm-10">
+	<input type="hidden" name="fileIdxs" th:value="${row.idx}">
+	<input type="text"  class="upload-name" th:value="${row.originalName}" readonly/>
+	<input type="hidden" th:id="${status.index}" class="fileIdxnum">			
+	<label th:for="|file_${status.index}|" class="control-label">찾아보기</label>
+	<input type="file" name="files" th:id="|file_${status.index}|"  style="display:none;" onchange="changeFilename(this)"> 
+	<button th:if="${status.first}" type="button" onclick="addFile()">+
+	<i class="fa fa-plus" aria-hidden="true" ></i>
+	</button>	
+	<button type="button" onclick="removeFile(this)">-
+	<i class="fa fa-minus" aria-hidden="true"></i>
+	</button>
+	</div>
+</div>
+ 
+
+<div id="btnDiv" style="text-align:right;">
+<button type="button" class="btn btn-primary" onclick="submit_button()">작성</button>
+<a type="button" th:href="@{/board/list?pageNum=1}" class="btn btn-secondary">목록</a>
+</div>
+</form>
+</div>
+</body>
+<script th:inline="javascript">
+
+var csrfHeaderName = /*[[${_csrf.headerName}]]*/
+	var csrfTokenValue = /*[[${_csrf.token}]]*/
+	$(document).ajaxSend(function(e,xhr,options){
+		xhr.setRequestHeader(csrfHeaderName,csrfTokenValue);
+	});
+
+
+/*<![CDATA[*/
+const fileList = /*[[ ${fileList} ]]*/; 
+/*]]>*/
+let fileIdx = fileList.length; 
+var is_action = true;
+let fileArry = [];
+
+alert(fileIdx);
+if(is_action){
+$(window).load(function(){
+		is_action=false;	
+ 		$(".fileIdxnum").each(function(index, item){
+ 			var currentIdx=$(this).attr('id');
+ 			let uploadname = $(".upload-name").val();
+ 			if(uploadname!="파일찾기"){
+ 			fileArry[currentIdx]=false;  				
+ 			}
+		}); 
+});
+}
+
+function addFile(){ 
+	const fileDivs = $('div[data-name="fileDiv"]');
+	if (fileDivs.length > 2) {
+		alert('파일은 최대 세 개까지 업로드 할 수 있습니다.');
+		return false;
+	}
+	fileIdx++;
+	fileArry[fileIdx] = false;
+ 	
+	const fileHtml = `
+		<div data-name="fileDiv">
+		<label for="file_${fileIdx}" class="col-sm-2 control-label">파일1</label>
+			<div class="col-sm-10">
+		<input type="hidden" id="${fileIdx}" class="fileIdxnum"}>
+			<input type="text"  value="파일찾기" readonly/>
+			<label for="file_${fileIdx}" class="control-label">찾아보기</label>
+			<input type="file" name="files" id="file_${fileIdx}"  style="display:none;" onchange="changeFilename(this)"> 
+			<button type="button" onclick="removeFile(this)">-
+			<i class="fa fa-minus" aria-hidden="true"></i>
+			</button>
+			</div>
+		</div>
+		`;
+		 
+		$('#btnDiv').before(fileHtml);
+}
+
+
+function removeFile(elem){
+
+	var currentIdx=$(elem).prevAll('input[class="fileIdxnum"]').attr('id');
+
+	const prevTag = $(elem).prev().prop('tagName');
+	if(prevTag === 'BUTTON'){
+		const file=$(elem).prevAll('input[type="file"]');
+		const filename = $(elem).prevAll('input[type="text"]');
+		file.val('');
+		filename.val('파일찾기');
+		$(elem).prevAll('input[name="fileIdxs"]').remove();
+		return false;
+	}
+
+	const target = $(elem).parents('div[data-name="fileDiv"]');
+	target.remove();
+	fileArry[currentIdx]=true;
+}
+
+function changeFilename(file){
+
+	file = $(file);
+	var currentIdx=$(file).prevAll('input[class="fileIdxnum"]').attr('id');
+	const filename = file[0].files[0].name;
+	const target = file.prevAll('input');
+	target.val(filename);
+	file.prevAll('input[name="fileIdxs"]').remove();
+	fileArry[currentIdx]=false;
+	alert(currentIdx);
+}
+
+
+function submit_button(){
+
+	const title = document.getElementById("title").value;
+	const email = document.getElementById("email").value;
+	const writer = document.getElementById("writer").value;
+	const content = document.getElementById("content").value;
+	const idx = document.getElementById("idx").value;
+	const fileDivs = $('div[data-name="fileDiv"]');
+
+	const sendingData = new FormData();
+	const files=[];
+
+	sendingData.append('title',title);
+	sendingData.append('email',email);
+	sendingData.append('writer',writer);
+	sendingData.append('content',content);
+	sendingData.append('idx',idx);
+
+
+	for(let i=0;i<fileArry.length;i++){
+		console.log(fileArry[i]);
+		if(fileArry[i]===false){
+			console.log("here is file... sendingData boxing..."+$('#file_'+i)[0].files[0].name);
+			sendingData.append('files',$('#file_'+i)[0].files[0]);
+		}
+	}	
+	
+	$.ajax({
+		type:"PUT",
+		url:"/board/posts/"+idx,
+		processData: false,  // 데이터 객체를 문자열로 바꿀지에 대한 값이다. true면 일반문자...
+	    contentType: false,  // 해당 타입을 true로 하면 일반 text로 구분되어 진다.
+	    data: sendingData,  //위에서 선언한 fromdata
+		success: function(data){
+			if(data){
+				alert("등록되었습니다.");
+				window.location.href = '/board/list';
+			}
+		},
+		error : function(request,status,error){
+
+			alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+
+			}
+	});
+}
+</script>
+</html>

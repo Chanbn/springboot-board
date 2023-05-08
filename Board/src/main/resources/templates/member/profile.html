@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+</head>
+<body>
+<!-- 	  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+<a th:text="${session.user.email}"></a>
+	<form th:action="@{/myPage/myContentList}" method="get">
+		<input type="hidden" id="pageNum" name="pageNum" th:value="1">
+		<input type="hidden" id="amount" name="amount" th:value="10" >
+		<input type="hidden" id="type" name="type" th:value="E" >
+		<input type="hidden" id="keyword" name="keyword" th:value="${session.user.email}" >
+		<button type="submit" id="myListbtn">내 게시물보기</button>
+	</form>
+    	<form th:action="@{/myPage/myCommentList}" method="get">
+		<input type="hidden" id="pageNum" name="pageNum" th:value="1">
+		<input type="hidden" id="amount" name="amount" th:value="10" >
+		<input type="hidden" id="type" name="type" th:value="E" >
+		<input type="hidden" id="keyword" name="keyword" th:value="${session.user.email}" >
+		<button type="submit" >내 댓글보기</button>
+	</form>
+	<form th:action="@{/myPage/myInfo}" method="get">
+		<button type="submit">회원정보수정</button>
+	</form> -->
+
+<span>개인정보수정</span>
+<input th:field="*{member.username}" hidden="true">
+<input th:field="*{member.nickname}" id="currentNickname" hidden="true">
+<div>
+<span>닉네임 : </span> <input th:field="*{member.nickname}" id="nickname" >
+</div>
+<div id="nicknameCheck"></div>
+<div>
+<span>현재 비밀번호 : </span> <input type="password" placeholder="비밀번호를 입력해주세요." id="currentPassword" >
+</div>
+<div>
+<span>변경 비밀번호 : </span> <input type="password"  maxlength="32" placeholder="비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요." id="newPassword1"  >
+</div>
+<div>
+<span>변경 비밀번호 : </span> <input type="password"  maxlength="32" placeholder="비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요." id="newPassword2"  >
+</div>
+<div id="passwordCheck"> </div>
+<button onClick="submitData()">변경하기</button>
+</body>
+
+
+<script th:inline="javascript">
+var csrfHeaderName = /*[[${_csrf.headerName}]]*/
+	var csrfTokenValue = /*[[${_csrf.token}]]*/
+	$(document).ajaxSend(function(e,xhr,options){
+		xhr.setRequestHeader(csrfHeaderName,csrfTokenValue);
+	});
+	
+var nicknameValid = false;
+var passwordValid = false;
+	
+$(function(){
+	$("#nickname").blur(function(){
+		nicknameCheck();
+	});
+	
+	$("#newPassword1").blur(function(){
+		passwordCheck();
+	});
+	$("#newPassword2").blur(function(){
+		passwordCheck();
+	});
+});
+function nicknameCheck(){
+	var nickname = document.getElementById("nickname").value;
+	var currentNickname = document.getElementById("currentNickname").value;
+	var html="";
+	if(currentNickname!=nickname){
+	$.ajax({
+		method: "GET",
+		url: "/member/profileCheck",
+		data: {word : nickname, type:2},
+	      success: function(data) {
+	    	  if(data.result=="이미 사용중인 "){
+		    	  html += "<span style='color:red;'>"+data.result+"  "+data.type+"</span>"	   
+		    	  nicknameValid = false;
+	    	  }else{
+		    	  html += "<span style='color:black;'>"+data.result+"  "+data.type+"</span>"
+		    	  nicknameValid = true;
+	    	  }
+	    	  $("#nicknameCheck").html(html);
+	      },
+	      error: function(request,status,error) {
+		    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		    console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		      }	
+	});
+	}else{
+  	  nicknameValid = true;
+	}
+	
+}
+
+function passwordCheck(){
+	var newPassword1= document.getElementById("newPassword1").value;
+	var newPassword2= document.getElementById("newPassword2").value;
+	var passwordChk = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\d~!@#$%^&*()+|=]{8,16}$/;
+	var html = "";
+	if(newPassword1 !== newPassword2){
+		html += "<span style='color:red;'> 비밀번호가 일치하지 않습니다. </span>"
+			passwordValid = false;
+	}	
+	else if(!passwordChk.test(newPassword2)||!passwordChk.test(newPassword1)){
+		html +="<span>비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자를 사용해야합니다.</span>";		
+		passwordValid = false;
+	}else{
+		html += "<span style='color:black;'> 비밀번호가 일치합니다. </span>"		
+		passwordValid = true;
+	}
+	$("#passwordCheck").html(html);
+}
+
+
+function submitData(){
+
+	if(nicknameValid&&passwordValid&&document.getElementById("currentPassword").value!=""){
+	var username = document.getElementById("username").value;
+	var nickname = document.getElementById("nickname").value;
+	var newPassword1= document.getElementById("newPassword1").value;
+	$.ajax({
+		method: "post",
+		url: "/member/profile",
+		data: {username : username, nickname : nickname, password : newPassword1 },
+	      success: function(data) {
+
+	      },
+	      error: function(request,status,error) {
+		    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		    console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		      }
+		
+	});}
+	else{
+		alert("입력값을 확인해주세요.")
+	}
+}
+
+</script>
+
+
+</html>

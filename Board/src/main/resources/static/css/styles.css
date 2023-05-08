@@ -1,0 +1,72 @@
+.comment-box {
+border: 1px solid black;
+margin: 10px;
+padding: 10px;
+background-color: #f2f2f2;
+}
+
+.comment-writer {
+font-weight: bold;
+}
+
+.comment-button {
+margin-left: 10px;
+}
+
+ul {
+list-style-type: none;
+padding: 0;
+}
+
+.child-comment-box {
+border: 1px solid grey;
+margin: 10px;
+padding: 10px;
+background-color: #f9f9f9;
+}
+
+.comment-reply {
+  margin-left: 50px; /* 대댓글 여백 */
+}
+
+.comment-date {
+	float: right;
+}
+
+.child-comment-writer {
+font-weight: bold;
+}
+
+.child-comment-button {
+margin-left: 10px;
+}
+
+
+.my-button {
+
+  padding: 10px 20px;
+  background-color: #f2f2f2;
+
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-button{
+  margin-left: 10px;
+  background-image: url('/images/570145.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  background-size: contain; /* 이미지를 버튼 크기에 맞게 조정 */
+  width: 15px; /* 버튼의 크기를 지정 */
+  height: 15px;
+  border: none;
+}
+
+
+
+
+
+
+
+   

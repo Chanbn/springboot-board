@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+<script src="//code.jquery.com/jquery.min.js"></script>
+</head>
+<body>
+<form method="post" th:action="@{/member/loginProc}">
+
+	<input type="text" name="username">
+	<input type="password" name="password" maxlength="32" >
+	<button type="submit">로그인</button>
+</form>
+
+<button sec:authorize="isAnonymous()" onclick="location.href='/oauth2/authorization/google'" type="submit">Google로그인</button>
+
+<div th:if="error">
+   <p id="valid" style="color: red; font-size:12px;"><a th:text="${exception}"></a></p>
+</div>
+
+</body>
+</html>

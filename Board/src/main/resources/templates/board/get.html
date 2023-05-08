@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<meta name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
+	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	<!-- ... -->
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+<h1 sec:authorize="!hasRole('user')">You do not have user role.</h1>
+<h1 sec:authorize="hasRole('user')">Has admin Role</h1>
+<div style="text-align:center">
+<table class="table">
+  <thead>
+    <tr>
+      <th colspan="3" scope="col">
+      <span th:text="${post.title}"></span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td colspan="1">
+        글번호 : <span class="boardIdx" th:id="${post.idx}" th:text="${post.idx}" style="text-align:left;" ></span>
+  </td>
+  <td colspan="2">
+  <div style="text-align:right">
+ 작성자 : <span th:text="${post.writer.nickname}"></span>&nbsp;&nbsp;&nbsp; <span th:text="${post.createdDate}"></span>
+  </div>
+  </td>
+  </tr>
+  
+  <tr>
+  <td colspan="3">
+<div th:if="${not #lists.isEmpty(fileList)}">
+  <label for="input-type-4">File</label>
+  <div class="col-sm-10">
+    <th:block th:each="row, status: ${fileList}">
+      <a th:href="@{/board/'+${category}+'/download(idx=${row.idx})}">
+        <i aria-hidden="true"></i>
+        [[${row.originalName}]]
+      </a>
+      <br />
+    </th:block>
+  </div>
+</div>
+
+  </tr>
+     
+    <tr height="200">
+      <td><span th:text="${post.content}"></span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div >
+
+
+<div style="float:left">
+<button type="button" onclick="goBack()" class="btn btn-secondary">목록</button>
+</div>
+<div style="float:right">
+<div sec:authorize="isAuthenticated()">
+<button type="button" id="deletePost" class="btn btn-danger" onclick="delete_button()">삭제</button>
+<a class="btn btn-success"  th:href="@{'/board/'+${category}+'/edit?idx='+${post.idx}}">수정</a>
+
+</div>
+</div>
+</div>
+
+
+			<form id="operForm" role="form" method="get">
+			<input id="idx" name="idx" type="hidden" th:value="${post.idx}">
+			<input name="pageNum" type="hidden" th:value="0">
+			<input name="amount" type="hidden" th:value="10">
+			</form>
+		
+			<form id="operForm2" role="form" method="get">
+			<input id="idx" name="idx" type="hidden" th:value="${post.idx}">
+			</form>
+			
+			<div style="margin:60px 0px 0px 400px">
+
+			</div>
+			
+
+	<div class="add-space">
+	
+	</div>
+
+			<ul class="chat">
+			</ul>
+			
+
+
+			
+			<div class="pannel-footer">
+			</div>
+			
+
+<div id ="commentList">
+
+</div>
+
+
+  <div id="comment-form" >
+    <form id="comment-form" method="post">
+      <input type="hidden" id="post-id" value="${post.idx}" />
+      <input type="hidden" id="parent-id" value="" />
+      <div class="form-group">
+        <textarea class="form-control" id="content" name="content" placeholder="댓글을 입력하세요" rows="3"></textarea>
+      </div>
+      <button id="comment-submit" type="submit" class="btn btn-primary" data-no="-1" >등록</button>
+    </form>
+  </div>
+
+
+
+</body>
+
+
+
+<script th:inline="javascript">
+
+
+
+
+$(function () {
+	 var postId = /*[[ ${post.idx} ]]*/;
+  var token = $("meta[name='_csrf']").attr("content");
+  var header = $("meta[name='_csrf_header']").attr("content");
+  $(document).ajaxSend(function(e, xhr, options) {
+      xhr.setRequestHeader(header, token);
+  });
+  
+ 
+  
+	var loginUserName = null;
+	var loginUserEmail = null;
+	var loginUserLongid = null;
+	var loginUserauthority = null;
+ 
+	$.ajax({
+		url: '/member/current',
+		type: 'GET',
+		success: function(user){
+			loginUserName = user.username;
+			loginUserEmail = user.email;
+			loginUserLongid = user.id;
+			loginUserauthority = user.roles;
+			console.log(loginUserName);
+			console.log(loginUserEmail);
+			console.log(loginUserLongid);
+			console.log(loginUserauthority[0]);
+		},
+		error: function(){
+			console.log('로그인 상태가 아닙니다.');
+		}
+	});
+	
+	
+  var boardEmail = /*[[${post.writer.email}]]*/
+
+ 
+
+/*   $("#modi").on("click",function(e){
+    if(boardEmail==loginUserEmail){
+      $("#operForm").attr("action","/board/modify?").submit();
+    } else {
+      alert("본인이 작성한 글만 수정 할 수 있습니다.")
+    }
+  });
+ */
+ 
+
+ $(document).on("click", "#comment-submit", function(e){
+	e.preventDefault();
+	 console.log(loginUserName);
+	var category = /*[[${category}]]*/ '';
+	 var no =$(this).attr('data-no');
+	 var parentId = null;
+	 var content = null;
+	 	if(no==-1){
+		    content = $('#content').val();
+	 	}else{
+		    parentId = no;
+		    content = $('#content'+no).val();	 		
+	 	}
+	    var username = loginUserName ? loginUserName : 'anonymous';
+	    $.ajax({
+	      url: '/comment/'+category+'/add',
+	      type: 'POST',
+	      contentType: 'application/json; charset=UTF-8',
+	      data: JSON.stringify({
+	        postId: postId,
+	        parentId: parentId,
+	        content: content,
+	        username: username,
+	        userId: loginUserLongid,
+	        category: category 
+	      }),
+	      success: function(response){
+	        location.reload();
+	      },
+	      error: function(request,status,error){
+	    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	      }
+	    });
+
+	 
+ });
+   
+	  // GET 방식으로 댓글 목록을 받아오는 함수
+	  function getComments() {
+	    $.ajax({
+	      type: "GET",
+	      url: "/comment/"+postId,
+	      data: {
+	        postId: postId
+	      },
+	      success: function(data) {
+	        // 댓글 목록을 출력하는 함수를 호출하여 데이터를 가공한 뒤 출력
+	        printComments(data);
+	      },
+	      error: function(request,status,error) {
+	    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	      }
+	    });
+	  }
+
+	  function makeCommentHtml(comment) {
+		    // 댓글 작성자와 내용을 출력
+		    var html;
+		    if(comment.parentCommentDto!=null){
+		    html = "<div class='comment-box comment-reply '>";
+		    }else{
+		    html = "<div class='comment-box my-button reply_add' data-no='"+comment.idx+"' >";
+		    }
+		    html += "<div>"; 
+		    html += "<span>" + comment.writer.username + "<span>"; 
+		    html += "<span class='comment-date'>"; 
+		    html += "<time datetime='" + comment.createDate + "'>" + new Date(comment.createDate).toLocaleString() + "</time>";  
+		    if(comment.delete_yn=='N' && loginUserName == comment.writer.username){
+		    html += "<button class='delete-button' data-no='"+comment.idx+"'> </button>";}
+			if(comment.delete_yn=='N' && loginUserauthority[0]=='ROLE_ADMIN'){				
+			html += "<button class='delete-button' data-no='"+comment.idx+"'> </button>";
+			}
+		    
+		    html += "<span>";
+		    html += "</div>";
+		    html += "<span>" + comment.content + "</span>"
+			html += "<div class='comment-form' data-parent-id='"+ comment.idx +"' style='display:none;'>";
+		    html += "<form method='post'>";
+		    html += "<div class='form-group'>";
+		    html += "<textarea id='content"+comment.idx+"'class='form-control' name='content' placeholder='댓글을 입력하세요' rows='3'></textarea>";
+		    html += "</div>";
+		    html += "<button id='comment-submit' data-no='"+comment.idx+"' type='submit' class='btn btn-primary'>등록</button>";
+		    html += "</form></div>";
+		    html += "</div>";
+		    return html;
+		}
+
+		// 댓글 목록을 출력하는 함수
+		function printComments(comments) {
+		    var html = "";
+		    $.each(comments, function(index, comment) {
+		        html += makeCommentHtml(comment);
+		    });
+		    $("#commentList").html(html);
+		}
+
+		$(document).on('click', '.reply_add', function(e) {
+		    e.preventDefault();
+		    var no = $(this).attr('data-no');
+		    var form = $(this).find('.comment-form');
+		    if (form.is(':visible')) {
+		        /* form.hide(); */
+		    } else {
+		        $('.comment-form').hide();
+		        form.show();
+		        form.find('[name="parent_id"]').val(no);
+		    }
+		});
+	  
+		$(document).on('click','.delete-button',function(e){
+			e.stopPropagation();
+		    var idx = $(this).attr('data-no');
+		    if (confirm("정말로 삭제하시겠습니까?")) {
+		        // 삭제 처리
+ 			$.ajax({
+				type: "DELETE",
+				url: "/comment/"+idx,
+				data: {
+					commentIdx: idx
+				},
+			      success: function(data) {
+				        // 댓글 목록을 출력하는 함수를 호출하여 데이터를 가공한 뒤 출력
+				        alert("댓글을 삭제하였습니다.");
+				        getComments();
+				      },
+				      error: function(request,status,error) {
+				    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+				    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+				      }
+			}); 
+		    }
+		});
+	  
+	  // 페이지가 로드되면 댓글 목록을 받아와서 출력
+	  getComments();
+	});
+
+	function delete_button(){
+		var boardIdx = parseInt([[${post.idx}]]);
+		var category = /*[[${category}]]*/ '';
+	$.ajax({
+		method: "DELETE",
+		url: "/board/"+category+"/delete/"+boardIdx,
+		data: {
+			boardIdx : boardIdx,
+			category : category
+		},
+		success: function(data){
+			alert(data);
+			window.location.replace("http://14.47.220.34:8081/home");
+		},
+		error: function(request,status,error) {
+	    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	      }
+	});	
+}
+	
+	
+function goBack(){
+	window.history.back();
+}
+
+
+
+</script>
+
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+</head>
+<body>
+	
+	  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+	<table class="table">
+  <thead class="table-light">
+	<tr>
+	<th scope="col">번호</th>
+	<th scope="col">제목</th>
+	<th scope="col">추천수</th>
+	<th scope="col">작성자</th>
+	<th scope="col">작성일자</th>
+	</tr>
+  </thead>
+  <tbody>
+	<tr th:if="${not #lists.isEmpty(boardList)}" th:each="row : ${boardList}">
+	<td th:text="${row.idx}">	</td>
+	<td> 
+	<a th:href="@{'/board/get?pageNum='+${pageMaker.cri.pageNum}+'&idx='+${row.idx}}">
+	<span th:text="${row.title}"></span>(<span th:text="${row.rnt}"></span>)</a>
+	</td>
+	<td th:text="${row.good}"></td>
+	<td th:text="${row.writer}"></td>
+	<td th:text="${row.regTime}">	</td>
+	</tr>
+	<tr th:unless="${not #lists.isEmpty(boardList)}">없습</tr>
+  </tbody>
+</table>
+
+
+
+
+<a th:href="@{'/board/write'}" type="button" class="btn btn-primary" style="float:right">글쓰기</a>
+<nav aria-label="...">
+  <ul class="pagination justify-content-center">
+
+    <li class="page-item" th:classappend="${pageMaker.prev==true ? '' : 'disabled'}">
+    	<a class="page-link" th:href="@{/myPage/myContentList(pageNum=${pageMaker.startPage-1},amount=${pageMaker.cri.amount},type=${pageMaker.cri.type},keyword=${pageMaker.cri.keyword})}">
+Previous</a>
+    </li>
+    <th:block th:each="num : ${#numbers.sequence(pageMaker.startPage,pageMaker.endPage)}">
+    <li class="page-item" th:classappend="${pageMaker.cri.pageNum == num ? 'active':''}">
+    <a class="page-link" th:href="@{/myPage/myContentList(pageNum=${num},amount=${pageMaker.cri.amount},type=${pageMaker.cri.type},keyword=${pageMaker.cri.keyword})}"><text th:text="${num}">
+    </a></li>
+	</th:block>
+
+    <li th:if="${pageMaker.next}" class="page-item" >
+    	<a class="page-link" th:href="@{/myPage/myContentList(pageNum=${pageMaker.endPage+1},amount=${pageMaker.cri.amount},type=${pageMaker.cri.type},keyword=${pageMaker.cri.keyword})}">
+Next</a>
+    </li>
+  </ul>
+</nav>
+</body>
+
+
+</html>

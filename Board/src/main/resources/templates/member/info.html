@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
+	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	<!-- ... -->
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+</head>
+<body>
+	  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+	<div>	
+	<div>
+		<input type="hidden" id="username" name="username" th:value="${username}">
+		<button type="submit" id="deleteId" onclick="doDelete()">회원탈퇴 시키기</button>
+	</div>
+	</div>
+	<form th:action="@{/member/postinfo}" method="get">
+		<input type="hidden" id="username" name="username" th:value="${username}">
+		<button type="submit" id="myListbtn">작성 게시물</button>
+	</form>
+	
+		<form th:action="@{/member/commentInfo}" method="get">
+		<input type="hidden" id="username" name="username" th:value="${username}">
+		<button type="submit" id="myListbtn">작성 댓글</button>
+	</form>
+	
+	<script th:inline="javascript">
+	
+	function doDelete(){
+
+		var username = document.getElementById("username").value;
+		var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+		alert(username);
+		$.ajax({
+			type:"DELETE",
+			url:"/member/delete/",
+			data:{username : username},
+			headers: { 'X-CSRF-TOKEN': token },
+			success: function(data){
+				alert("탈퇴시켰습니다.");
+				window.location.replace("http://14.47.220.34:8081/home");
+			},
+			error: function(request,status,error) {
+		    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		      }
+		});
+	}
+	
+	</script>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+<script src="https://code.jquery.com/jquery.min.js"></script>
+</head>
+<body>
+	  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+	<table class="table">
+  <thead class="table-light">
+	<tr>
+	<th scope="col">번호</th>
+	<th scope="col">내용</th>
+	<th scope="col">작성자</th>
+	<th scope="col">작성일자</th>
+	</tr>
+  </thead>
+  <tbody>
+	<tr th:if="${not #lists.isEmpty(commentList)}" th:each="row : ${commentList}">
+	<td th:text="${row.idx}">	</td>
+	<td> 
+ 	<a th:href="@{'/board/get?page='+${page}+'&idx='+${row.idx}}"> 
+	<span th:text="${row.content}"></span></a>
+	</td>
+
+	<td th:text="${row.writer.username}"></td>
+	<td th:text="${row.createdDate}">	</td>
+	<!-- <td th:text="${row.viewcount}"></td> -->
+	</tr>
+	<tr th:unless="${not #lists.isEmpty(commentList)}">데이터가 없습니다.</tr>
+  </tbody>
+</table>
+
+
+
+
+
+
+ <a th:href="@{'/board/write'}" type="button" class="btn btn-primary" style="float:right">글쓰기</a>
+<nav aria-label="...">
+  <ul class="pagination justify-content-center">
+
+    <li class="page-item" th:classappend="${prev==true ? '' : 'disabled'}">
+    	<a class="page-link" th:href="@{/board/list(page=${startpage-1},type=${type},word=${word})}">
+Previous</a>
+    </li>
+    <th:block th:each="num : ${#numbers.sequence(startpage,endpage)}">
+    <li class="page-item" th:classappend="${page+1 == num ? 'active':''}">
+
+    <a class="page-link" th:href="@{/board/list(page=${num},type=${type},word=${word})}"><text th:text="${num}">
+    </a></li>
+	</th:block>
+
+    <li th:if="${next}" class="page-item" >
+    	<a class="page-link" th:href="@{/board/list(page=${endpage+1},type=${type},word=${word})}">
+Next</a>
+    </li>
+  </ul>
+</nav>
+
+</body>
+<script th:inline="javascript">
+
+
+
+    var msg = /*[[${msg}]]*/;
+    
+    if(msg === '삭제되었습니다.') {
+        alert("삭제되었습니다.");
+    }
+</script>
+
+</html>

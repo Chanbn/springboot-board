@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<meta name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
+	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	<!-- ... -->
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<head>
+<div th:replace="/fragments/header.html :: fragment-header"></div>
+</head>
+<body>
+
+	  <div th:replace="/fragments/nav.html :: fragment-nav"></div>
+	<table class="table">
+  <thead class="table-light">
+	<tr>
+	<th scope="col">식별번호</th>
+	<th scope="col">아이디</th>
+	<th scope="col">이름</th>
+	<th scope="col">닉네임</th>
+	</tr>
+  </thead>
+  <tbody>
+	<tr th:if="${not #lists.isEmpty(list)}" th:each="row : ${list}">
+
+	<td th:text="${row.id}">	</td>
+	<td> 
+	<form th:action="@{/member/info}" method="get">
+	<input type="hidden" name=username th:value="${row.username}">	
+	<button style="color: white; " onclick="getInfo()">	
+	<span th:text="${row.username}" style="color: black"></span></button>
+	</form>
+	</td> 
+	<td th:text="${row.name}"></td>
+	<td th:text="${row.nickname}"></td>
+
+	</tr>
+	<tr th:unless="${not #lists.isEmpty(list)}">회원정보가 없습니다.</tr>
+  </tbody>
+</table>
+</body>
+
+<script th:inline="javascript">
+function getInfo(){
+	$.ajax({
+		type:"POST",
+		data:{username : username},
+		url: "/member/info/"+username,
+		success: function(response){
+			
+	      },
+	      error: function(request,status,error){
+	    	  alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	    	  console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+	      }
+	    });
+}
+
+
+</script>
+
+
+</html>
