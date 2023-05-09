@@ -2,7 +2,9 @@ package com.board;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -76,6 +78,7 @@ public class memberServiceImplTest {
 		            .password(bCryptPasswordEncoder.encode("!qlalfqjsgh12"))
 		            .nickname("nick")
 		            .roles(roles)
+		            .delete_yn("N")
 		            .build();
 
     }
@@ -207,6 +210,59 @@ public class memberServiceImplTest {
 			Throwable exception = catchThrowable(()->memberService.updateProfile(dto));
 			assertThat(exception).isInstanceOf(MemberException.class);
 			assertThat(((MemberException)exception).getExceptionType()).isEqualTo(MemberExceptionType.NOT_FOUND_MEMBER);			
+		}
+	}
+	
+	@Nested
+	class 회원목록조회{
+		
+		@Test
+		@DisplayName("성공")
+		public void 성공() {
+			  List<String> roles = new ArrayList<>();
+			    roles.add("USER");
+			     Member member2 = Member.builder()
+			            .username("2testId123")
+			            .name("이름2")
+			            .email("2test123@email.com")
+			            .password(bCryptPasswordEncoder.encode("!qlalfqjsgh12"))
+			            .nickname("2nick")
+			            .roles(roles)
+			            .delete_yn("N")
+			            .build();
+			List<Member> expectedList = new ArrayList<>();
+			expectedList.add(member);
+			expectedList.add(member2);
+ 			
+ 			when(memberRepository.findAll()).thenReturn(expectedList);
+ 			
+ 			List<MemberProfileDto> result = memberService.getList();
+ 			List<MemberProfileDto> expected = new ArrayList<>();
+ 			expected.add(new MemberProfileDto(member));
+ 			expected.add(new MemberProfileDto(member2));
+ 			assertEquals(expected.get(0).getUsername(), result.get(0).getUsername());
+ 			assertEquals(expected.get(1).getUsername(), result.get(1).getUsername());
+		}
+	}
+	
+	@Nested
+	class 회원탈퇴{
+		
+		@Test
+		@DisplayName("성공")
+		public void 성공() {
+			when(memberRepository.findByUsername(member.getUsername())).thenReturn(Optional.of(member));
+			when(memberRepository.save(member)).thenReturn(member);
+			memberService.deleteMember(member.getUsername());
+			assertEquals(member.getDelete_yn(), "Y");
+		}
+		@Test
+		@DisplayName("존재하지 않는 아이디")
+		public void 실패() {
+			when(memberRepository.findByUsername(member.getUsername())).thenThrow(new MemberException(MemberExceptionType.WRONG_USER));
+			Throwable exception = catchThrowable(()->memberService.deleteMember(member.getUsername()));
+			assertThat(exception).isInstanceOf(MemberException.class);
+			assertThat(((MemberException)exception).getExceptionType()).isEqualTo(MemberExceptionType.WRONG_USER);
 		}
 	}
 }
